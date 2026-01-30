@@ -1,0 +1,7 @@
+Simulation. Our initial non-contextual Thompson sampling baseline was mismatched to the environment: rewards are user-dependent, and users change each round, so a single global mean per (video, brand, action) washes out preference structure. This made Thompson look random-like while a user-aware greedy/oracle policy dominated.
+
+Cohort fix. We introduce user cohorts (advertising segments). Each user is assigned to one of C cohorts, and we run an independent Beta-Bernoulli Thompson sampler per cohort over the same (video, brand, action) arms. Reporting is cohort-weighted, so the metric reflects the population mix while keeping each bandit instance stationary.
+
+Aggregation fix. To reduce Bernoulli noise without changing the objective, each pull aggregates M impressions for the chosen arm, and we update Beta posteriors with successes/failures (i.e., alpha += successes, beta += failures). This yields cleaner learning curves and more stable comparisons.
+
+Results. Main protocol (rounds=20000, cohorts=8, impressions-per-pull=10, candidate set size=12 videos x 5 brands) shows clear learning: random 0.502±0.015, no-edit greedy 0.638±0.029, Thompson 0.570±0.029, constrained oracle 0.650±0.034, with Thompson uplift +0.069 over random. In the ablation with num_cohorts=1 (same settings, but no segmentation), Thompson collapses toward random: random 0.501±0.006 vs Thompson 0.511±0.008 (uplift +0.010), confirming that cohort segmentation is the key to a non-contextual baseline that meaningfully learns.
