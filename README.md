@@ -3,6 +3,7 @@
 ## Requirements
 - Python 3.9+
 - numpy, matplotlib, pytest
+- GPU >= NVIDIA H200 
 - You must have verified access to the META AI Sam3 see below.
 
 ## Run the simulation
@@ -11,7 +12,7 @@ cd /workspace/adembeddings/ad_pipeline
 source .venv/bin/activate
 streamlit run app.py --server.port 8501 --server.address 0.0.0.0
 
-SAM License
+## SAM License
 Last Updated: November 19, 2025
 
 “Agreement” means the terms and conditions for use, reproduction, distribution and modification of the SAM Materials set forth herein.
