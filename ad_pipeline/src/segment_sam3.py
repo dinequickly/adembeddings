@@ -98,6 +98,19 @@ def _to_numpy_mask(mask):
     return np.array(mask)
 
 
+def _to_numpy_scores(scores):
+    if isinstance(scores, np.ndarray):
+        return scores
+    try:
+        import torch
+
+        if isinstance(scores, torch.Tensor):
+            return scores.detach().cpu().numpy()
+    except Exception:
+        pass
+    return np.array(scores)
+
+
 def _save_mask(mask_np, out_path):
     mask_np = (mask_np > 0).astype(np.uint8) * 255
     Image.fromarray(mask_np).save(out_path)
@@ -194,7 +207,7 @@ def segment_image(
         masks, scores, boxes = _extract_masks(result)
 
     # Pick top mask by score
-    scores_np = np.array(scores)
+    scores_np = _to_numpy_scores(scores)
     top_idx = int(np.argmax(scores_np))
     mask_np = _to_numpy_mask(masks[top_idx])
     box = None
