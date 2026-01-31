@@ -1,13 +1,13 @@
 {
   "Gemini_Generated_Image_uhwt5guhwt5guhwt_Coke": {
-    "image_url": "https://nlobsjnpcjxfabhnbvza.supabase.co/storage/v1/object/public/ads/10836",
-    "timestamp": 1738297200,
+    "image_url": "https://nlobsjnpcjxfabhnbvza.supabase.co/storage/v1/object/public/ads/10875",
+    "timestamp": 1769876662,
     "image_id": "Gemini_Generated_Image_uhwt5guhwt5guhwt",
     "brand": "Coke"
   },
   "Gemini_Generated_Image_uhwt5guhwt5guhwt_Pepsi": {
-    "image_url": "https://nlobsjnpcjxfabhnbvza.supabase.co/storage/v1/object/public/ads/10841",
-    "timestamp": 1738297201,
+    "image_url": "https://nlobsjnpcjxfabhnbvza.supabase.co/storage/v1/object/public/ads/10876",
+    "timestamp": 1769876662,
     "image_id": "Gemini_Generated_Image_uhwt5guhwt5guhwt",
     "brand": "Pepsi"
   },
@@ -22,5 +22,17 @@
     "timestamp": 1769874906,
     "image_id": "parsons_247860_23e",
     "brand": "ClickUp"
+  },
+  "cereal_Frosted Flakes": {
+    "image_url": "https://nlobsjnpcjxfabhnbvza.supabase.co/storage/v1/object/public/ads/10871",
+    "timestamp": 1769876526,
+    "image_id": "cereal",
+    "brand": "Frosted Flakes"
+  },
+  "cereal_Froot Loops": {
+    "image_url": "https://nlobsjnpcjxfabhnbvza.supabase.co/storage/v1/object/public/ads/10889",
+    "timestamp": 1769876526,
+    "image_id": "cereal",
+    "brand": "Froot Loops"
   }
 }

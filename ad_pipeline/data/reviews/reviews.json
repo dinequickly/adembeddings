@@ -21,6 +21,16 @@
         "status": "approved",
         "notes": ""
       }
+    },
+    "cereal": {
+      "Coke": {
+        "status": "rejected",
+        "notes": ""
+      },
+      "Pepsi": {
+        "status": "rejected",
+        "notes": ""
+      }
     }
   }
 }

@@ -110,9 +110,9 @@ def _resolve_brand_product_path(brand, brand_assets_dir):
     return best_path
 
 
-def _send_to_webhook(brief, webhook_url):
+def _send_to_webhook(brief, webhook_url, image_paths=None, run_id=None):
     """Send images to webhook for each brand"""
-    images = list_images(RAW_DIR)
+    images = image_paths if image_paths is not None else list_images(RAW_DIR)
     brand_assets_dir = os.path.join(ROOT_DIR, "data", "brand_assets")
     results = []
 
@@ -129,6 +129,8 @@ def _send_to_webhook(brief, webhook_url):
 
             files = {}
             data = {"image_id": img_id, "brand": brand_name}
+            if run_id is not None:
+                data["run_id"] = str(run_id)
 
             try:
                 with open(img_path, "rb") as f:
@@ -277,52 +279,6 @@ with st.sidebar:
             st.success(f"Exported: {out_path}")
 
     st.divider()
-    st.subheader("Webhook")
-    webhook_url = st.text_input(
-        "Webhook URL",
-        value="https://maxipad.app.n8n.cloud/webhook/2836304f-21a9-43b0-9afd-586fba803fa2",
-        type="password"
-    )
-    if st.button("Send to webhook"):
-        if brief and webhook_url:
-            with st.spinner("Sending to N8N..."):
-                results = _send_to_webhook(brief, webhook_url)
-
-                # Save to file for Next.js feed
-                n8n_data = {}
-
-                # Load existing results if file exists
-                if os.path.exists(N8N_RESULTS_PATH):
-                    try:
-                        with open(N8N_RESULTS_PATH, 'r') as f:
-                            n8n_data = json.load(f)
-                    except:
-                        n8n_data = {}
-
-                # Add new results
-                for result in results:
-                    if result.get("status") == 200 and result.get("image_url"):
-                        key = f"{result['image_id']}_{result['brand']}"
-                        n8n_data[key] = {
-                            "image_url": result["image_url"],
-                            "timestamp": int(time.time()),
-                            "image_id": result["image_id"],
-                            "brand": result["brand"]
-                        }
-
-                # Save to file
-                with open(N8N_RESULTS_PATH, 'w') as f:
-                    json.dump(n8n_data, f, indent=2)
-
-                # Also keep in session state for Streamlit UI
-                if "webhook_results" not in st.session_state:
-                    st.session_state.webhook_results = {}
-                for result in results:
-                    if result.get("status") == 200 and result.get("image_url"):
-                        key = f"{result['image_id']}_{result['brand']}"
-                        st.session_state.webhook_results[key] = result["image_url"]
-
-                st.success(f"Generated {len([r for r in results if r.get('status') == 200])} images")
 
 if brief is None:
     st.stop()
@@ -357,6 +313,70 @@ for img_id, _, path in image_options:
 
 if not selected_path:
     st.stop()
+
+with st.sidebar:
+    st.divider()
+    st.subheader("Webhook")
+    webhook_url = st.text_input(
+        "Webhook URL",
+        value="https://maxipad.app.n8n.cloud/webhook/2836304f-21a9-43b0-9afd-586fba803fa2",
+        type="password",
+    )
+    send_only_selected = st.checkbox("Send only selected image", value=True)
+    overwrite_results = st.checkbox("Overwrite previous results", value=True)
+    if st.button("Send to webhook"):
+        if brief and webhook_url:
+            images_to_send = [selected_path] if send_only_selected and selected_path else images
+            if not images_to_send:
+                st.error("No images to send.")
+            else:
+                run_id = int(time.time())
+                with st.spinner("Sending to N8N..."):
+                    results = _send_to_webhook(
+                        brief,
+                        webhook_url,
+                        image_paths=images_to_send,
+                        run_id=run_id,
+                    )
+
+                    # Save to file for Next.js feed
+                    n8n_data = {} if overwrite_results else {}
+
+                    # Load existing results if file exists and not overwriting
+                    if not overwrite_results and os.path.exists(N8N_RESULTS_PATH):
+                        try:
+                            with open(N8N_RESULTS_PATH, "r") as f:
+                                n8n_data = json.load(f)
+                        except Exception:
+                            n8n_data = {}
+
+                    # Add new results
+                    for result in results:
+                        if result.get("status") == 200 and result.get("image_url"):
+                            key = f"{result['image_id']}_{result['brand']}"
+                            n8n_data[key] = {
+                                "image_url": result["image_url"],
+                                "timestamp": run_id,
+                                "image_id": result["image_id"],
+                                "brand": result["brand"],
+                                "run_id": run_id,
+                            }
+
+                    # Save to file
+                    with open(N8N_RESULTS_PATH, "w") as f:
+                        json.dump(n8n_data, f, indent=2)
+
+                    # Also keep in session state for Streamlit UI
+                    if "webhook_results" not in st.session_state:
+                        st.session_state.webhook_results = {}
+                    if overwrite_results:
+                        st.session_state.webhook_results = {}
+                    for result in results:
+                        if result.get("status") == 200 and result.get("image_url"):
+                            key = f"{result['image_id']}_{result['brand']}"
+                            st.session_state.webhook_results[key] = result["image_url"]
+
+                    st.success(f"Generated {len([r for r in results if r.get('status') == 200])} images")
 
 mask_path = os.path.join(MASK_DIR, f"{selected}_mask.png")
 
