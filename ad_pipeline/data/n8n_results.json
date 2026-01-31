@@ -1,0 +1,26 @@
+{
+  "Gemini_Generated_Image_uhwt5guhwt5guhwt_Coke": {
+    "image_url": "https://nlobsjnpcjxfabhnbvza.supabase.co/storage/v1/object/public/ads/10836",
+    "timestamp": 1738297200,
+    "image_id": "Gemini_Generated_Image_uhwt5guhwt5guhwt",
+    "brand": "Coke"
+  },
+  "Gemini_Generated_Image_uhwt5guhwt5guhwt_Pepsi": {
+    "image_url": "https://nlobsjnpcjxfabhnbvza.supabase.co/storage/v1/object/public/ads/10841",
+    "timestamp": 1738297201,
+    "image_id": "Gemini_Generated_Image_uhwt5guhwt5guhwt",
+    "brand": "Pepsi"
+  },
+  "parsons_247860_23e_Monday": {
+    "image_url": "https://nlobsjnpcjxfabhnbvza.supabase.co/storage/v1/object/public/ads/10861",
+    "timestamp": 1769874906,
+    "image_id": "parsons_247860_23e",
+    "brand": "Monday"
+  },
+  "parsons_247860_23e_ClickUp": {
+    "image_url": "https://nlobsjnpcjxfabhnbvza.supabase.co/storage/v1/object/public/ads/10859",
+    "timestamp": 1769874906,
+    "image_id": "parsons_247860_23e",
+    "brand": "ClickUp"
+  }
+}

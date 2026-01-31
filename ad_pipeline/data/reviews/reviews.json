@@ -5,6 +5,22 @@
         "status": "approved",
         "notes": ""
       }
+    },
+    "Gemini_Generated_Image_uhwt5guhwt5guhwt": {
+      "Coke": {
+        "status": "needs_manual_fix",
+        "notes": ""
+      },
+      "Pepsi": {
+        "status": "approved",
+        "notes": ""
+      }
+    },
+    "parsons_247860_23e": {
+      "ClickUp": {
+        "status": "approved",
+        "notes": ""
+      }
     }
   }
 }

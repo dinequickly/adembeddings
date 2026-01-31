@@ -1,0 +1,5 @@
+image_id,brand,variant_path,mask_path,acceptability_score,approved,notes
+image (2),Coke,/Users/maxwellmoroz/Desktop/selection/ad_pipeline/data/images/variants/image (2)_Coke.png,/Users/maxwellmoroz/Desktop/selection/ad_pipeline/data/images/masks/image (2)_mask.png,,True,
+image (2),Pepsi,/Users/maxwellmoroz/Desktop/selection/ad_pipeline/data/images/variants/image (2)_Pepsi.png,/Users/maxwellmoroz/Desktop/selection/ad_pipeline/data/images/masks/image (2)_mask.png,,False,
+Gemini_Generated_Image_uhwt5guhwt5guhwt,Coke,/Users/maxwellmoroz/Desktop/selection/ad_pipeline/data/images/variants/Gemini_Generated_Image_uhwt5guhwt5guhwt_Coke.png,/Users/maxwellmoroz/Desktop/selection/ad_pipeline/data/images/masks/Gemini_Generated_Image_uhwt5guhwt5guhwt_mask.png,0.43308019936084746,True,
+Gemini_Generated_Image_uhwt5guhwt5guhwt,Pepsi,/Users/maxwellmoroz/Desktop/selection/ad_pipeline/data/images/variants/Gemini_Generated_Image_uhwt5guhwt5guhwt_Pepsi.png,/Users/maxwellmoroz/Desktop/selection/ad_pipeline/data/images/masks/Gemini_Generated_Image_uhwt5guhwt5guhwt_mask.png,0.4551869958639145,False,
