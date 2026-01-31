@@ -8,6 +8,15 @@ from PIL import Image
 from .config import MASK_DIR
 
 
+def _try_import_transformers_sam3():
+    try:
+        from transformers import Sam3Processor, Sam3Model  # type: ignore
+        import torch  # noqa: F401
+        return Sam3Processor, Sam3Model, None
+    except Exception as e:
+        return None, None, str(e)
+
+
 def _try_import_sam3():
     errors = []
     try:
@@ -94,6 +103,38 @@ def _save_mask(mask_np, out_path):
     Image.fromarray(mask_np).save(out_path)
 
 
+_TRANSFORMERS_MODEL = None
+_TRANSFORMERS_PROCESSOR = None
+
+
+def _segment_with_transformers(image, prompt, threshold=0.5, mask_threshold=0.5):
+    global _TRANSFORMERS_MODEL, _TRANSFORMERS_PROCESSOR
+    from transformers import Sam3Processor, Sam3Model
+    import torch
+
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    if _TRANSFORMERS_MODEL is None or _TRANSFORMERS_PROCESSOR is None:
+        _TRANSFORMERS_MODEL = Sam3Model.from_pretrained(
+            "facebook/sam3",
+            torch_dtype=torch.float16 if torch.cuda.is_available() else torch.float32,
+        ).to(device)
+        _TRANSFORMERS_PROCESSOR = Sam3Processor.from_pretrained("facebook/sam3")
+
+    inputs = _TRANSFORMERS_PROCESSOR(images=image, text=prompt.strip(), return_tensors="pt").to(device)
+    for key in inputs:
+        if inputs[key].dtype == torch.float32:
+            inputs[key] = inputs[key].to(_TRANSFORMERS_MODEL.dtype)
+    with torch.no_grad():
+        outputs = _TRANSFORMERS_MODEL(**inputs)
+    results = _TRANSFORMERS_PROCESSOR.post_process_instance_segmentation(
+        outputs,
+        threshold=threshold,
+        mask_threshold=mask_threshold,
+        target_sizes=inputs.get("original_sizes").tolist(),
+    )[0]
+    return results["masks"], results["scores"], results.get("boxes")
+
+
 def segment_image(
     image_path,
     prompt,
@@ -101,43 +142,56 @@ def segment_image(
     out_mask_path=None,
     out_meta_path=None,
     allow_fallback=False,
+    threshold=0.5,
+    mask_threshold=0.5,
 ):
     out_mask_path = out_mask_path or os.path.join(
         MASK_DIR, os.path.splitext(os.path.basename(image_path))[0] + "_mask.png"
     )
     out_meta_path = out_meta_path or os.path.splitext(out_mask_path)[0] + ".json"
 
-    sam3_processor_cls, build_fn, import_err = _try_import_sam3()
-    if sam3_processor_cls is None or build_fn is None:
-        msg = "SAM3 not available. Install the official SAM3 repo and ensure it is on PYTHONPATH. "
-        msg += f"Import errors: {import_err}"
-        if allow_fallback:
-            image = Image.open(image_path).convert("L")
-            w, h = image.size
-            mask = np.zeros((h, w), dtype=np.uint8)
-            x0, y0 = w // 4, h // 4
-            x1, y1 = 3 * w // 4, 3 * h // 4
-            mask[y0:y1, x0:x1] = 255
-            _save_mask(mask, out_mask_path)
-            meta = {"status": "fallback", "reason": msg, "score": 0.0, "box": [x0, y0, x1, y1]}
-            with open(out_meta_path, "w") as f:
-                json.dump(meta, f, indent=2)
-            return {"status": "fallback", "mask_path": out_mask_path, "meta_path": out_meta_path}
-        return {"status": "skipped", "reason": msg}
+    # Prefer transformers-based SAM3 (matches HF Space usage) if available
+    tfm_proc, tfm_model, tfm_err = _try_import_transformers_sam3()
+    if tfm_proc is not None and tfm_model is not None:
+        image = Image.open(image_path).convert("RGB")
+        try:
+            masks, scores, boxes = _segment_with_transformers(
+                image, prompt, threshold=threshold, mask_threshold=mask_threshold
+            )
+        except Exception as e:
+            return {"status": "skipped", "reason": f"Transformers SAM3 failed: {e}"}
+    else:
+        sam3_processor_cls, build_fn, import_err = _try_import_sam3()
+        if sam3_processor_cls is None or build_fn is None:
+            msg = "SAM3 not available. Install the official SAM3 repo and ensure it is on PYTHONPATH. "
+            msg += f"Import errors: {import_err}"
+            if allow_fallback:
+                image = Image.open(image_path).convert("L")
+                w, h = image.size
+                mask = np.zeros((h, w), dtype=np.uint8)
+                x0, y0 = w // 4, h // 4
+                x1, y1 = 3 * w // 4, 3 * h // 4
+                mask[y0:y1, x0:x1] = 255
+                _save_mask(mask, out_mask_path)
+                meta = {"status": "fallback", "reason": msg, "score": 0.0, "box": [x0, y0, x1, y1]}
+                with open(out_meta_path, "w") as f:
+                    json.dump(meta, f, indent=2)
+                return {"status": "fallback", "mask_path": out_mask_path, "meta_path": out_meta_path}
+            return {"status": "skipped", "reason": msg}
 
-    try:
-        import torch
+        try:
+            import torch
 
-        if not torch.cuda.is_available():
-            print("Warning: CUDA not available. SAM3 may be slow or fail on CPU.")
-    except Exception:
-        print("Warning: torch not available; cannot check CUDA for SAM3.")
+            if not torch.cuda.is_available():
+                print("Warning: CUDA not available. SAM3 may be slow or fail on CPU.")
+        except Exception:
+            print("Warning: torch not available; cannot check CUDA for SAM3.")
 
-    model = _build_model(build_fn, checkpoint_path=checkpoint_path)
-    processor = _build_processor(sam3_processor_cls, model)
-    image = Image.open(image_path).convert("RGB")
-    result = _run_processor(processor, image, prompt)
-    masks, scores, boxes = _extract_masks(result)
+        model = _build_model(build_fn, checkpoint_path=checkpoint_path)
+        processor = _build_processor(sam3_processor_cls, model)
+        image = Image.open(image_path).convert("RGB")
+        result = _run_processor(processor, image, prompt)
+        masks, scores, boxes = _extract_masks(result)
 
     # Pick top mask by score
     scores_np = np.array(scores)

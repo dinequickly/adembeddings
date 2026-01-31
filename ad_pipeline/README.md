@@ -42,6 +42,16 @@ export SAM3_CHECKPOINT=/path/to/sam3_checkpoint.pth
 
 If SAM3 is not installed or the checkpoint is missing, segmentation will skip and instruct you.
 
+### SAM3 via Transformers (optional, HF Space style)
+You can also use the Hugging Face Transformers SAM3 API (as used in the `akhaliq/sam3` space).
+Install transformers (main branch is sometimes required for SAM3):
+
+```bash
+pip install -U git+https://github.com/huggingface/transformers
+```
+
+The pipeline will automatically use the Transformers SAM3 backend if it is available.
+
 ### Hugging Face Qwen Image Edit (optional)
 Set your HF token to enable Qwen editing:
 
