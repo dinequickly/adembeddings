@@ -13,8 +13,8 @@ def image_id_from_path(path):
     return os.path.splitext(os.path.basename(path))[0]
 
 
-def segment_images(prompt, checkpoint_path=None, allow_fallback=False):
-    images = list_images(RAW_DIR)
+def segment_images(prompt, checkpoint_path=None, allow_fallback=False, image_paths=None):
+    images = image_paths if image_paths is not None else list_images(RAW_DIR)
     return segment_folder(images, prompt, checkpoint_path=checkpoint_path, allow_fallback=allow_fallback)
 
 
@@ -33,7 +33,16 @@ def generate_variants(brief, backend="overlay"):
                     f"Replace the object inside the provided mask with a realistic {brand_name} can. "
                     "Keep lighting consistent."
                 )
-                res = generate_qwen_variant(img_path, mask_path, prompt, out_path)
+                res = generate_qwen_variant(
+                    img_path,
+                    mask_path,
+                    prompt,
+                    out_path,
+                    reference_image_path=product_path,
+                )
+                # If Qwen fails, fall back to overlay
+                if res.get("status") == "error":
+                    res = overlay_variant(img_path, mask_path, product_path, out_path)
             else:
                 res = overlay_variant(img_path, mask_path, product_path, out_path)
             res.update({"image_id": img_id, "brand": brand_name, "variant_path": out_path})
